@@ -1,3 +1,5 @@
+const notEmptyField ='Поле не должно быть пустым';
+
 const isEmail = (email) => {
     const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (email.match(regEx)) return true;
@@ -11,14 +13,15 @@ const isEmail = (email) => {
   
   exports.validateSignupData = (data) => {
     let errors = {};
-  
+    if(isEmpty(data.secondName)) errors.secondName =notEmptyField;
+    if(isEmpty(data.name)) errors.name = notEmptyField;
     if (isEmpty(data.email)) {
-      errors.email = 'Поле не должно быть пустым';
+      errors.email = notEmptyField;
     } else if (!isEmail(data.email)) {
       errors.email = 'Введите правильный email';
     }
   
-    if (isEmpty(data.password)) errors.password = 'Поле не должно быть пустым';
+    if (isEmpty(data.password)) errors.password = notEmptyField;
     if (data.password !== data.confirmPassword)
       errors.confirmPassword = 'Пароли должны совподать';
 
@@ -30,9 +33,8 @@ const isEmail = (email) => {
   
   exports.validateLoginData = (data) => {
     let errors = {};
-  
-    if (isEmpty(data.email)) errors.email = 'Поле не должно быть пустым';
-    if (isEmpty(data.password)) errors.password = 'Поле не должно быть пустым';
+    if (isEmpty(data.email)) errors.email = notEmptyField;
+    if (isEmpty(data.password)) errors.password = notEmptyField;
   
     return {
       errors,

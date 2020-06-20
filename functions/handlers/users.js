@@ -14,6 +14,8 @@ const {
 // Sign users up
 exports.signup = (req, res) => {
   const newUser = {
+    name: req.body.name,
+    secondName: req.body.secondName,
     email: req.body.email,
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
@@ -45,6 +47,8 @@ exports.signup = (req, res) => {
     .then((idToken) => {
       token = idToken;
       const userCredentials = {
+        name: newUser.name,
+        secondName: newUser.secondName,
         role: newUser.role,
         email: newUser.email,
         createdAt: new Date().toISOString(),
