@@ -1,6 +1,11 @@
-const { admin, db, storage } = require('../util/admin');
+const { admin, db, auth, storage } = require('../util/admin');
 
 const config = require('../util/config');
+
+const BusBoy = require('busboy');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 
 const firebase = require('firebase');
 firebase.initializeApp(config);
@@ -15,11 +20,14 @@ const {
 exports.signup = (req, res) => {
   const newUser = {
     name: req.body.name,
-    secondName: req.body.secondName,
+    lastName: req.body.lastName,
     email: req.body.email,
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
-    role: "user"
+    role: "user",
+    city: "Неизвестно",
+    group: "Неизвестно",
+    testResults: { 1: "0", 2: "0", 3: "0", 4: "0", 5: "0", 6: "0", 7: "0", 8: "0", 9: "0", 10: "0", }
   };
 
   const { valid, errors } = validateSignupData(newUser);
@@ -33,7 +41,7 @@ exports.signup = (req, res) => {
     .get()
     .then((doc) => {
       if (doc.exists) {
-        return res.status(400).json({ handle: 'пользователь с такой почтой уже существует!' });
+        return res.status(400).json({ email: 'Пользователь с такой почтой уже существует!' });
       } else {
         return firebase
           .auth()
@@ -51,10 +59,12 @@ exports.signup = (req, res) => {
         secondName: newUser.secondName,
         role: newUser.role,
         email: newUser.email,
+
+        testResults: newUser.testResults,
         createdAt: new Date().toISOString(),
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${
           config.storageBucket
-        }/o/${noImg}?alt=media`,
+          }/o/${noImg}?alt=media`,
         userId
       };
       return db.doc(`/users/${newUser.email}`).set(userCredentials);
@@ -64,11 +74,7 @@ exports.signup = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
-        return res.status(400).json({ email: 'Пользователь с такой почтой уже зарегистрирован' });
-      } else {
-        return res.status(500).json({ error: err.code });
-      }
+      return res.status(500).json({ error: err.code });
     });
 };
 // Log user in
@@ -94,7 +100,7 @@ exports.login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.code === 'auth/wrong-password'||err.code === 'auth/user-not-found') {
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
         return res
           .status(403)
           .json({ general: 'Проверьте логин и пароль' });
@@ -104,9 +110,10 @@ exports.login = (req, res) => {
 
 // Add user details
 exports.addUserDetails = (req, res) => {
+  console.log(req.user.email);
   let userDetails = reduceUserDetails(req.body);
 
-  db.doc(`/users/${req.user.handle}`)
+  db.doc(`/users/${req.user.email}`)
     .update(userDetails)
     .then(() => {
       return res.json({ message: 'Details added successfully' });
@@ -132,18 +139,13 @@ exports.getAuthenticatedUser = (req, res) => {
       return res.status(500).json({ error: err.code });
     });
 };
+
 // Upload a profile image for user
-exports.uploadImage = (req, res) => {
-  const BusBoy = require('busboy');
-  const path = require('path');
-  const os = require('os');
-  const fs = require('fs');
 
+exports.changeProfileImage = (req, res) => {
   const busboy = new BusBoy({ headers: req.headers });
-
   let imageToBeUploaded = {};
   let imageFileName;
-
   busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
     console.log(fieldname, file, filename, encoding, mimetype);
     if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
@@ -159,10 +161,13 @@ exports.uploadImage = (req, res) => {
     imageToBeUploaded = { filepath, mimetype };
     file.pipe(fs.createWriteStream(filepath));
   });
+  busboy.on('field', (fieldName, value) => {
+    if (fieldName === 'authorId') authorId = value;
+  });
   busboy.on('finish', () => {
     storage
       .upload(imageToBeUploaded.filepath, {
-        destination: `image/${imageFileName}`,
+        destination: `images/${imageFileName}`,
         resumable: false,
         metadata: {
           metadata: {
@@ -170,14 +175,14 @@ exports.uploadImage = (req, res) => {
           }
         }
       })
-  /*    .then(() => {
-        const imageUrl = `https://firebasestorage.googleapis.com/v1/b/${
-          config.storageBucket
-        }/o/${imageFileName}?alt=media`;
-        //return db.doc(`/users/${req.user.handle}`).update({ imageUrl });
-      })*/
       .then(() => {
-        return res.json({ message: 'image uploaded successfully' });
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${
+          config.storageBucket
+          }/o/images%2F${imageFileName}?alt=media`;
+        return db.collection('users').doc(req.user.email).update({ imageUrl });
+      })
+      .then(() => {
+        return res.json({ message: 'image update successfully' });
       })
       .catch((err) => {
         console.error(err);
@@ -185,4 +190,4 @@ exports.uploadImage = (req, res) => {
       });
   });
   busboy.end(req.rawBody);
-};
+}

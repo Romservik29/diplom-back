@@ -259,7 +259,7 @@ exports.getIllustrations = (req, res) => {
                     id: doc.id
                 })
             })
-            return res.json({ books: illustrations })
+            return res.json({ illustrations: illustrations })
         })
         .catch(err => {
             console.error(err);
@@ -411,17 +411,16 @@ exports.deleteMovie = (req, res) => {
 }
 //Tests
 exports.deleteTest = (req, res) => {
-    const document = db.collection('test').doc(`${req.params.testId}`);
+    const document = db.collection('tests').doc(`${req.params.testId}`);
     document
         .get()
         .then((doc) => {
             if (!doc.exists) {
                 return res.status(404).json({ error: 'Test not found' });
             }
-      //Проверка
-      /*if (req.user.role !== 'admin' ) {
-        return res.status(403).json({ error: 'Unauthorized' });
-      }*/else {
+            if (req.user.role !== 'admin') {
+                return res.status(403).json({ error: 'Unauthorized' });
+            } else {
                 return document.delete();
             }
         })

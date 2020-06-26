@@ -24,7 +24,7 @@ module.exports = (req, res, next) => {
         .get();
     })
     .then((data) => {
-      req.user.role =data.docs[0].data().role; 
+      req.user.role = data.docs[0].data().role; 
       req.user.email = data.docs[0].data().email;
       return next();
     })

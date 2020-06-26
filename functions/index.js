@@ -14,9 +14,9 @@ const {
     addMovie,
     addAudio,
     addBook,
-    addTest,
+    getIllustrations
 } = require('./handlers/data')
-const { login, signup, uploadImage, getAuthenticatedUser } = require('./handlers/users')
+const { login, signup, getAuthenticatedUser,changeProfileImage,addUserDetails } = require('./handlers/users')
 const {
     uploadPortret,
     getAuthors,
@@ -24,7 +24,7 @@ const {
     getAuthor,
     changeBio,
 } = require('./handlers/author')
-
+const {getTest, getResult} = require('./handlers/test')
 const cors = require('cors');
 const fbAuth = require('./util/fbAuth');
 app.use(cors());
@@ -33,8 +33,9 @@ app.use(cors());
 
 app.post('/signup', signup);
 app.post('/login', login);
-app.post('/image', uploadImage);
 app.get('/user/',fbAuth, getAuthenticatedUser)
+app.post('/user/details',fbAuth,addUserDetails)
+app.post('/user/image',fbAuth, changeProfileImage)
 // Authors routes 
 app.get('/authors?', getAuthors)//?page&limit
 app.post('/author',addAuthor)
@@ -46,15 +47,17 @@ app.get('/audio?', getAudio)//?page&limit
 app.post('/audio', addAudio)
 app.post('/book', addBook)
 app.post('/movie', addMovie)
-app.post('/illustration', addIllustration)
-//app.post('/author/:authorId/test', addTest)
+app.get('/illustration?', getIllustrations)
+//app.post('/test', addTest)
 app.delete('/audio/:audioId',fbAuth, deleteAudio)
 app.delete('/movie/:movieId',fbAuth, deleteMovie)
 app.delete('/book/:bookId',fbAuth, deleteBook)
-app.delete('/author/:authorId/test/:testId', deleteTest)
-app.delete('/illustration/:illustrationId', deleteIllustration)
+app.delete('/test/:testId',fbAuth, deleteTest)
+app.delete('/illustration/:illustrationId',fbAuth, deleteIllustration)
+//Tests Routes
+app.get('/test/:testId',getTest)
+app.post('/test/:testId',fbAuth,getResult)
 
-//app.post('/author', addAuthor)
 
 exports.api = functions.region('us-central1').https.onRequest(app)
 
