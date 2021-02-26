@@ -1,5 +1,5 @@
 module.exports= {
-    apiKey: "AIzaSyAHjhfkKGTtP0kd-2bii7a6Y1zUtTKttJo",
+    apiKey: "AIzaSyAHjhfkK2TtP0kd-2bii4a6Y1zUtTTttJo",
     authDomain: "diplomsgk2020-ff454.firebaseapp.com",
     databaseURL: "https://diplomsgk2020-ff454.firebaseio.com",
     projectId: "diplomsgk2020-ff454",
